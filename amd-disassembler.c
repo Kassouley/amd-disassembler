@@ -53,7 +53,7 @@ int disassembler(const char*          hsaco_file,
     binary_file = fopen(hsaco_file, "rb");
     if (binary_file == NULL)
     {
-        printf("Cannot open %s\n", hsaco_file);
+        printf("> AMD-Disassember Error : Cannot open %s\n", hsaco_file);
         exit(EXIT_FAILURE);
     }
     else
@@ -98,7 +98,7 @@ int disassembler(const char*          hsaco_file,
     assembly_file = fopen(output_file, "w");
     if (assembly_file == NULL)
     {
-        printf("Cannot open %s\n", output_file);
+        printf("> AMD-Disassember Error : Cannot open %s\n", output_file);
         exit(EXIT_FAILURE);
     }
     else

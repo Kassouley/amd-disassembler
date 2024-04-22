@@ -43,6 +43,10 @@ check_option()
     done  
     APP_NAME=$1
     APP_CMD=$@
+    if [ -z $APP_CMD ]; then
+        echo "Error : No input binary"
+        usage
+    fi
 }
 
 check_option $@
@@ -54,7 +58,7 @@ case "$language" in
     "hc") LANGUAGE=3 ;;
     "hip") LANGUAGE=4 ;;
     "llvm_ir") LANGUAGE=5 ;;            
-    *) echo "No language $language."; usage ;;
+    *) echo "Error : No language $language."; usage ;;
 
 esac
 
@@ -63,14 +67,17 @@ ROCM_GPUTARGET=amdgcn-amd-amdhsa
 INSTALLED_GPU=$($ROCM_PATH/bin/offload-arch | grep -m 1 -E gfx[^0]{1})
 ISA_NAME="$ROCM_GPUTARGET--$INSTALLED_GPU"
 
+WORK_DIR=$PWD
+SCRIPT_DIR=$(dirname $0)
+
 TMP_DIR="./tmp"
 mkdir $TMP_DIR 2> /dev/null
 
 export LOADER_OPTIONS_APPEND="-dump-code=1 -dump-dir=$TMP_DIR"
 
-echo "> Execute '$APP_CMD'"
+echo "> Execute '$WORK_DIR/$APP_CMD'"
 echo "> Command output :"
-eval "$APP_CMD"
+eval "$WORK_DIR/$APP_CMD"
 
 echo "> Disassemble '$APP_CMD' for $language and $ISA_NAME"
 
@@ -78,7 +85,7 @@ FILES="$TMP_DIR/*.hsaco"
 for hsaco in $FILES
 do
     output_file=$output_dir/$(basename $APP_NAME)_$(basename $hsaco).s
-    eval ./amd-disassembler $hsaco $ISA_NAME $LANGUAGE $output_file
+    eval $SCRIPT_DIR/amd-disassembler $hsaco $ISA_NAME $LANGUAGE $output_file
 done
 
 if [ $keep_tmp_dir == 0 ]; then
