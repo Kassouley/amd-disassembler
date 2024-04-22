@@ -3,15 +3,7 @@
 usage()
 {
     echo
-    echo -e "Usage : disassemble <options> -l <language> <cmd> <cmd args>"
-    echo
-    echo -e "language :"
-    echo -e "\tnone : none"
-    echo -e "\topencl_1_2 : OpenCL 1.2."
-    echo -e "\topencl_2_0 : OpenCL 2.0."
-    echo -e "\thc : AMD Hetrogeneous C++ "
-    echo -e "\thip : HIP"
-    echo -e "\tllvm_ir : LLVM IR, either textual (.ll) or bitcode (.bc) format."
+    echo -e "Usage : disassemble <options> <cmd> <cmd args>"
     exit
 }
 
@@ -19,10 +11,8 @@ check_option()
 {
     keep_tmp_dir=0
     output_dir=.
-    opt_list_short="hd:tl:" ; 
-    opt_list="help,output-dir:,keep-tmp,language:" ; 
-    language="none"
-
+    opt_list_short="hd:t" ; 
+    opt_list="help,output-dir:,keep-tmp" ; 
 
     TEMP=$(getopt -o $opt_list_short \
                   -l $opt_list \
@@ -35,7 +25,6 @@ check_option()
         case "$1" in
             -h|--help) usage ;;
             -d|--output-dir) output_dir=$2 ; shift 2;;
-            -l|--language) language=$2 ; shift 2;;
             -t|--keep-tmp) keep_tmp_dir=1 ; shift ;;
             --) shift ; break ;;
             *) echo "No option $1."; usage ;;
@@ -50,17 +39,6 @@ check_option()
 }
 
 check_option $@
-
-case "$language" in
-    "none") LANGUAGE=0 ;;
-    "opencl_1_2") LANGUAGE=1 ;;
-    "opencl_2_0") LANGUAGE=2 ;;
-    "hc") LANGUAGE=3 ;;
-    "hip") LANGUAGE=4 ;;
-    "llvm_ir") LANGUAGE=5 ;;            
-    *) echo "Error : No language $language."; usage ;;
-
-esac
 
 ROCM_PATH=/opt/rocm
 ROCM_GPUTARGET=amdgcn-amd-amdhsa
@@ -79,13 +57,13 @@ echo "> Execute '$WORK_DIR/$APP_CMD'"
 echo "> Command output :"
 eval "$WORK_DIR/$APP_CMD"
 
-echo "> Disassemble '$APP_CMD' for $language and $ISA_NAME"
+echo "> Disassemble '$APP_CMD' for $ISA_NAME"
 
 FILES="$TMP_DIR/*.hsaco"
 for hsaco in $FILES
 do
     output_file=$output_dir/$(basename $APP_NAME)_$(basename $hsaco).s
-    eval $SCRIPT_DIR/amd-disassembler $hsaco $ISA_NAME $LANGUAGE $output_file
+    eval $SCRIPT_DIR/amd-disassembler $hsaco $ISA_NAME $output_file
 done
 
 if [ $keep_tmp_dir == 0 ]; then
